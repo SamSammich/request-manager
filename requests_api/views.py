@@ -1,9 +1,80 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
-from .serializers import RegisterSerializer
+from .models import Request
+from .serializers import RegisterSerializer, RequestSerializer
 
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+
+class IsAdminOrOwner(permissions.BasePermission):
+    """
+    Администратор может работать со всеми заявками.
+    Обычный пользователь — только со своими заявками.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_staff:
+            return True
+
+        return obj.user == request.user
+
+
+class RequestViewSet(viewsets.ModelViewSet):
+    serializer_class = RequestSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
+
+    # Фильтрация и поиск
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['status', 'priority']
+    search_fields = ['title', 'description']
+
+    def get_queryset(self):
+        queryset = Request.objects.all()
+
+        # Обычный пользователь видит только свои заявки
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(user=self.request.user)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        # Автоматически привязываем заявку к текущему пользователю
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['patch'], url_path='status')
+    def update_status(self, request, pk=None):
+        instance = self.get_object()
+        new_status = request.data.get('status')
+
+        if new_status is None:
+            return Response(
+                {'detail': 'status is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        valid_statuses = Request.Status.values
+
+        if new_status not in valid_statuses:
+            return Response(
+                {
+                    'detail': 'Invalid status',
+                    'allowed_statuses': valid_statuses,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        instance.status = new_status
+        instance.save(update_fields=['status', 'updated_at'])
+
+        return Response(
+            {'status': instance.status},
+            status=status.HTTP_200_OK
+        )
