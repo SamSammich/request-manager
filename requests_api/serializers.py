@@ -68,3 +68,22 @@ class RequestSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         )
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'is_staff',
+            'date_joined',
+        )
+        read_only_fields = (
+            'id',
+            'username',
+            'email',
+            'is_staff',
+            'date_joined',
+        )

@@ -4,15 +4,24 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
+from django.contrib.auth.models import User
 from .models import Request
-from .serializers import RegisterSerializer, RequestSerializer
-
+from .serializers import RegisterSerializer, RequestSerializer, UserSerializer
+from .filters import RequestFilter
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return User.objects.all()
+
+        return User.objects.filter(id=self.request.user.id)
 
 class IsAdminOrOwner(permissions.BasePermission):
     """
@@ -31,22 +40,19 @@ class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
-    # Фильтрация и поиск
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['status', 'priority']
+    filterset_class = RequestFilter
     search_fields = ['title', 'description']
 
     def get_queryset(self):
         queryset = Request.objects.all()
 
-        # Обычный пользователь видит только свои заявки
         if not self.request.user.is_staff:
             queryset = queryset.filter(user=self.request.user)
 
         return queryset
 
     def perform_create(self, serializer):
-        # Автоматически привязываем заявку к текущему пользователю
         serializer.save(user=self.request.user)
 
     @action(detail=True, methods=['patch'], url_path='status')

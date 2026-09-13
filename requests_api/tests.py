@@ -24,7 +24,12 @@ class RequestAPITests(APITestCase):
     def authenticate(self, user):
         self.client.force_authenticate(user=user)
 
-    def create_request(self, user, title='Test request', priority='medium'):
+    def create_request(
+        self,
+        user,
+        title='Test request',
+        priority='medium'
+    ):
         self.authenticate(user)
 
         return self.client.post(
@@ -40,35 +45,78 @@ class RequestAPITests(APITestCase):
     def test_create_request(self):
         response = self.create_request(self.user)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['user'], self.user.username)
-        self.assertEqual(response.data['status'], 'new')
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+        self.assertEqual(
+            response.data['user'],
+            self.user.username
+        )
+        self.assertEqual(
+            response.data['status'],
+            'new'
+        )
 
     def test_user_sees_only_own_requests(self):
-        self.create_request(self.user, 'User 1 request')
-        self.create_request(self.user2, 'User 2 request')
+        self.create_request(
+            self.user,
+            'User 1 request'
+        )
+        self.create_request(
+            self.user2,
+            'User 2 request'
+        )
 
         self.authenticate(self.user)
 
-        response = self.client.get('/api/auth/requests/')
+        response = self.client.get(
+            '/api/auth/requests/'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['title'], 'User 1 request')
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            len(response.data['results']),
+            1
+        )
+        self.assertEqual(
+            response.data['results'][0]['title'],
+            'User 1 request'
+        )
 
     def test_admin_sees_all_requests(self):
-        self.create_request(self.user, 'User 1 request')
-        self.create_request(self.user2, 'User 2 request')
+        self.create_request(
+            self.user,
+            'User 1 request'
+        )
+        self.create_request(
+            self.user2,
+            'User 2 request'
+        )
 
         self.authenticate(self.admin)
 
-        response = self.client.get('/api/auth/requests/')
+        response = self.client.get(
+            '/api/auth/requests/'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            len(response.data['results']),
+            2
+        )
 
     def test_user_cannot_access_other_users_request(self):
-        response = self.create_request(self.user2, 'Private request')
+        response = self.create_request(
+            self.user2,
+            'Private request'
+        )
 
         request_id = response.data['id']
 
@@ -94,8 +142,14 @@ class RequestAPITests(APITestCase):
             format='json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'in_progress')
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data['status'],
+            'in_progress'
+        )
 
     def test_invalid_status(self):
         response = self.create_request(self.user)
@@ -132,6 +186,15 @@ class RequestAPITests(APITestCase):
             '/api/auth/requests/?priority=high'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['title'], 'High request')
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            len(response.data['results']),
+            1
+        )
+        self.assertEqual(
+            response.data['results'][0]['title'],
+            'High request'
+        )
