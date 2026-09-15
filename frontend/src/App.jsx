@@ -704,10 +704,9 @@ function App() {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="mb-1">
+          <h1 className="mb-1 text-center text-dark">
             Менеджер заявок
           </h1>
-
           <div className="text-muted">
             Пользователь:{' '}
             <strong>{currentUser.username}</strong>
