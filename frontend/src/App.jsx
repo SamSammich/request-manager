@@ -618,7 +618,7 @@ function App() {
           <div className="col-md-6 col-lg-5">
             <div className="card shadow">
               <div className="card-body p-4">
-                <h2 className="text-center mb-4">
+                <h2 className="mb-1 text-center text-dark">
                   Вход в систему
                 </h2>
 
