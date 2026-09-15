@@ -163,8 +163,6 @@ POSTGRES_HOST=db
 POSTGRES_PORT=5432
 ```
 
-> **Важно:** файл `.env` не должен добавляться в Git-репозиторий.
-
 ---
 
 ## Запуск Backend через Docker
