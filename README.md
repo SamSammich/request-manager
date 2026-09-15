@@ -633,8 +633,6 @@ POSTGRES_HOST=db
 POSTGRES_PORT=5432
 ```
 
-> **Important:** Do not commit the `.env` file to the Git repository.
-
 ---
 
 ## Running the Backend with Docker
