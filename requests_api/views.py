@@ -5,13 +5,16 @@ from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+
 from .models import Request
 from .serializers import RegisterSerializer, RequestSerializer, UserSerializer
 from .filters import RequestFilter
 
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
@@ -22,6 +25,27 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             return User.objects.all()
 
         return User.objects.filter(id=self.request.user.id)
+
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='statistics')
+    def statistics(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {'detail': 'Only administrators can access statistics.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        users = User.objects.all().order_by('id')
+        serializer = self.get_serializer(users, many=True)
+
+        return Response({
+            'count': users.count(),
+            'users': serializer.data,
+        })
 
 class IsAdminOrOwner(permissions.BasePermission):
     """

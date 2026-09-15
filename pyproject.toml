@@ -4,15 +4,17 @@ version = "0.1.0"
 description = ""
 authors = ["Abdusamatov Somon <abdusamadov55@gmail.com>"]
 readme = "README.md"
-packages = [{include = "request_manager"}]
+package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.12,<4.0"
+python = ">=3.12"
 django = "^6.1.1"
 djangorestframework = "^3.18.1"
 djangorestframework-simplejwt = "^5.5.1"
 django-filter = "^26.1"
 psycopg2-binary = "^2.9.13"
+dotenv = "^0.9.9"
+django-cors-headers = "^4.9.0"
 
 
 [build-system]
