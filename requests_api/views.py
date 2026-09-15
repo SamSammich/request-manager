@@ -47,6 +47,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             'users': serializer.data,
         })
 
+
 class IsAdminOrOwner(permissions.BasePermission):
     """
     Администратор может работать со всеми заявками.
